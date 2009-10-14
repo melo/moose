@@ -194,7 +194,9 @@ Roles can require that certain methods are implemented by any class which
 C<does> the role.
 
 Note that attribute accessors also count as methods for the purposes
-of satisfying the requirements of a role.
+of satisfying the requirements of a role. For this to work, the
+attribute must be declared before the call to C<with()> (see
+L<"CAVEATS"> below for details).
 
 =item B<excludes (@role_names)>
 
@@ -276,6 +278,71 @@ before/around/after modifiers.
 In most cases, this will be a non-issue; however, it is something to keep in
 mind when using method modifiers in a role. You should never assume any
 ordering.
+
+=item *
+
+Attribute accessors count as methods for the purpose of satisfying requires
+but the attribute declaration must be done before the call to C<with()>.
+
+For example, given this role:
+
+    package MyRequireRole;
+    use Moose::Role;
+    
+    requires('attr');
+    
+    1;
+
+This class will fail:
+
+    package MyClassFail;
+    use Moose;
+    
+    with 'MyRequireRole';
+    
+    has attr => ( isa => 'Str', is => 'ro' );
+    
+    1;
+
+But this class works:
+
+    package MyClassOk;
+    use Moose;
+    
+    has attr => ( isa => 'Str', is => 'ro' );
+    
+    with 'MyRequireRole';
+    
+    1;
+
+If the attribute is declared inside a second role, you must use multiple calls to C<with()>. For example, given this role:
+
+    package MyProvideRole;
+    use Moose::Role;
+    
+    has attr => ( isa => 'Str', is => 'ro' );
+    
+    1;
+
+This class will fail:
+
+    package MyClassAlsoFail;
+    use Moose;
+    
+    with 'MyProvideRole', 'MyRequireRole';
+    
+    1;
+
+But this one works:
+
+    package MyClassAlsoOk;
+    use Moose;
+    
+    with 'MyProvideRole';
+    with 'MyRequireRole';
+    
+    1;
+
 
 =back
 
