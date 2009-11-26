@@ -9,10 +9,12 @@ Moose::Cookbook::Extending::Recipe2 - Providing a role for the base object class
 
   package MooseX::Debugging;
 
+  use Moose ();
   use Moose::Exporter;
 
   Moose::Exporter->setup_import_methods(
       base_class_roles => ['MooseX::Debugging::Role::Object'],
+      also => 'Moose',
   );
 
   package MooseX::Debugging::Role::Object;
